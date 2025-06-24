@@ -14,11 +14,12 @@ monkey.patch_all()
 from flask import Flask, jsonify, request, redirect, make_response
 from flask_cors import CORS
 import musicapi
+import re
 from gevent.pywsgi import WSGIServer
 from gevent.pool import Pool
 
-application = Flask(__name__, static_folder='templates/static')
-application.json.ensure_ascii = False
+application = Flask(__name__)
+application.config['JSON_AS_ASCII'] = False
 CORS(application, resources=r'/*')
 
 
@@ -30,6 +31,19 @@ def __set_no_cache(res):
     response.headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
     return response
 
+@application.route('/favicon.ico')
+def favicon():
+    return application.send_static_file('favicon.ico')
+
+@application.route('/', methods=['POST', 'GET'])
+def index():
+    musicapi_info = {
+        "api_name": "Nier Demon's MusicApi",
+        "email": "niexiangxing@gmail.com",
+        "support_server": ["kugou", "wyy", "qqmusic", "kuwo"],
+        "personal_website": "https://niestar.tech"
+    }
+    return jsonify(musicapi_info), 200, {'Content-Type': 'application/json; charset=utf-8', 'indent': 2}
 
 @application.route(rule="/kugou/<song_id>", methods=["GET", "POST"])
 def kugou_url(song_id):
@@ -77,6 +91,7 @@ def qqmusic_lrc(song_id):
 def kuwo_url(song_id):
     MusicApi = musicapi.MusicApi_kuwo('')
     ret = MusicApi.get_kuwo_url(song_id)
+    ret = re.sub(r'http://([a-z]{2})\.sycdn', r'http://\1-sycdn', ret)
     return __set_no_cache(ret)
 
 

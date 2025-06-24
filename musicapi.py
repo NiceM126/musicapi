@@ -134,7 +134,8 @@ class MusicApi_wyy(MusicApi_kugou):
         """
         # 这里要添加自己的cookie
         url = "http://music.163.com/api/v6/playlist/detail"
-        self.headers["Cookie"] = self.cookie
+        if self.cookie:
+            self.headers["Cookie"] = self.cookie
         ret = requests.post(url, data={"s": "0", "id": self.song_ids, "n": "1000", "t": "0"},
                             headers=self.headers).json()
         ids = ''
@@ -194,7 +195,8 @@ class MusicApi_wyy(MusicApi_kugou):
         :return:
         """
         url = f'https://music.163.com/api/song/enhance/player/url?id={music_id}&ids=%5B{music_id}%5D&br=3200000'
-        self.headers["Cookie"] = self.cookie
+        if self.cookie:
+            self.headers["Cookie"] = self.cookie
         ret = requests.get(url, headers=self.headers).json()
         download_url = ret['data'][0]['url']
         msg = download_url if download_url else {'msg': '出现了错误，错误位置：获取音乐源'}
@@ -270,7 +272,8 @@ class MusicApi_qq(MusicApi_wyy):
         :return:
         """
         # guid会影响成功率，所以要随机
-        self.headers['cookie'] = self.cookie
+        if self.cookie:
+            self.headers['cookie'] = self.cookie
         req = ""
         ret = {}
         code = 0
@@ -305,7 +308,7 @@ class MusicApi_kuwo(MusicApi_qq):
     @property
     def get_kuwo_list(self):
         kuwo_music_list = []
-        for y in range(1, 10):
+        for y in range(1, 25):          # 分页请求
             url = (f"https://bd.kuwo.cn/api/www/playlist/playListInfo?pid={self.song_ids}&pn={y}&rn=20&httpsStatus=1&reqId"
                    f"={MusicApi_kuwo_sign().get_ReqId}&plat=web_www&from=")
             self.headers["Referer"] = "https://bd.kuwo.cn/playlist_detail/" + self.song_ids
@@ -318,7 +321,7 @@ class MusicApi_kuwo(MusicApi_qq):
                                         'pic': i['pic'],
                                         'lrc': f'{self.HOST}/kuwo/lrc/{song_id}.lrc',
                                         'music_id': song_id})
-            if len(musicList) < 20:
+            if len(musicList) < 1:
                 break
         return kuwo_music_list
 
@@ -386,11 +389,11 @@ if __name__ == '__main__':
     # print("网易云音乐源地址", MusicApi.get_wyy_url(music_list[0]['music_id']))
     # # ---------------------下载示例-----------------------
 
-    MusicApi.song_ids = "8672698451"
+    MusicApi.song_ids = "9472269874"
     music_list = MusicApi.get_qq_list
     print("QQ歌单信息：" + json.dumps(music_list, ensure_ascii=False))
 
-    cookie = ""
+    cookie = "cb907a6dee7f211c6010c571e30c2856"
     # 下载时设置cookie，否则某些歌曲下载不了
     MusicApi.MusicApi_set_cookie(cookie)
 
